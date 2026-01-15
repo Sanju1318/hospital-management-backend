@@ -1,0 +1,12 @@
+package com.example.choudhary.EntityDto;
+
+import lombok.Data;
+
+@Data
+public class LoginRequestDto {
+	
+	private String userName;
+	
+	private String password;
+
+}
