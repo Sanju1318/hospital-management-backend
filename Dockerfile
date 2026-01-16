@@ -1,23 +1,40 @@
-# Step 1: Use official OpenJDK 17
-FROM openjdk:17-jdk-slim
+# ==============================
+# STEP 1: Build Stage (Maven)
+# ==============================
+FROM eclipse-temurin:17-jdk-jammy AS build
 
-# Step 2: Set working directory
 WORKDIR /app
 
-# Step 3: Copy all project files
-COPY . .
+# Copy only required files first (better cache)
+COPY pom.xml .
+COPY mvnw .
+COPY .mvn .mvn
 
-# Step 4: Make Maven wrapper executable
+# Make mvnw executable
 RUN chmod +x mvnw
 
-# Step 5: Build the Spring Boot JAR
+# Download dependencies (cache layer)
+RUN ./mvnw dependency:go-offline
+
+# Copy source code
+COPY src src
+
+# Build jar
 RUN ./mvnw clean package -DskipTests
 
-# Step 6: Expose port 8080
+
+# ==============================
+# STEP 2: Runtime Stage
+# ==============================
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /app
+
+# Copy jar from build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose port
 EXPOSE 8080
 
-# Step 7: Set environment variables for Spring Boot (optional default values)
-ENV SPRING_PROFILES_ACTIVE=prod
-
-# Step 8: Start the Spring Boot app
-CMD ["java", "-jar", "target/*.jar"]
+# Run app
+ENTRYPOINT ["java", "-jar", "app.jar"]
