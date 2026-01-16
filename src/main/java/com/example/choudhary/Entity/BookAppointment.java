@@ -34,4 +34,8 @@ public class BookAppointment {
 	@JoinColumn(name = "leadership_id", nullable = false)
 	@ToString.Exclude
 	private Leadership leadership;
+	@ManyToOne
+@JoinColumn(name = "patient_id")
+private Patient patient;
+
 }

@@ -10,7 +10,7 @@ import com.example.choudhary.Entity.Patient;
 public interface PatientRepo extends JpaRepository<Patient, Integer>{
 	
 //	@Query("SELECT p FROM Patient p LEFT JOIN FETCH p.appointments a LEFT JOIN FETCH a.leadership")
-	// @Query("SELECT p FROM Patient p LEFT JOIN FETCH p.appointments")
-	// List<Patient> findAllpatientWithAppoinment();
+	@Query("SELECT p FROM Patient p LEFT JOIN FETCH p.appointments")
+	List<Patient> findAllpatientWithAppoinment();
 
 }

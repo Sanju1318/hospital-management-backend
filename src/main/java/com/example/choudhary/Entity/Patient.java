@@ -39,4 +39,7 @@ public class Patient {
 
     @OneToMany(mappedBy = "patient", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<Report> report = new ArrayList<>();
+        @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<BookAppointment> appointments;
+
 }
