@@ -17,8 +17,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
 
-@EnableMethodSecurity(prePostEnabled = true)
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
@@ -28,53 +28,63 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // ✅ VERY IMPORTANT
+            // ✅ CORS ENABLE
             .cors(Customizer.withDefaults())
 
+            // ✅ CSRF DISABLE (JWT ke liye required)
             .csrf(csrf -> csrf.disable())
 
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // ✅ STATELESS SESSION
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
 
             .authorizeHttpRequests(auth -> auth
-            	    .requestMatchers("/auth/**").permitAll()
-            	    .requestMatchers("/user/**").permitAll()   // ✅ CHANGE
-            	    .requestMatchers("/admin/**").hasRole("ADMIN")
-            	                       .requestMatchers(HttpMethod.GET, "/gallary/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/staff/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/doctor/**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/report/**").permitAll()
-                    
-                    .requestMatchers(HttpMethod.POST, "/user/contact**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/admin/contact/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/user/apnt**").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/admin/apnt/**").hasRole("ADMIN")
+                // 🔓 PUBLIC APIs
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/user/**").permitAll()
 
-                    .requestMatchers(HttpMethod.POST, "/admin/report/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/admin/doctor/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/admin/staff/**").hasRole("ADMIN")
-                    .requestMatchers(HttpMethod.POST, "/admin/gallary/**").hasRole("ADMIN")
-            	    .requestMatchers(HttpMethod.POST,"/admin/newpatient/**").hasRole("ADMIN")
-            	    .requestMatchers(HttpMethod.POST,"/admin/pharmacy/**").hasRole("ADMIN")
-            	    .anyRequest().authenticated()
-            	)
+                .requestMatchers(HttpMethod.GET, "/gallary/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/staff/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/doctor/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/report/**").permitAll()
 
+                .requestMatchers(HttpMethod.POST, "/user/contact**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/user/apnt**").permitAll()
+
+                // 🔐 ADMIN APIs
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                // 🔒 EVERYTHING ELSE
+                .anyRequest().authenticated()
+            )
+
+            // ✅ JWT FILTER
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ GLOBAL CORS CONFIG
+    // ✅ FINAL CORS CONFIG (RENDER + LOCAL)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "https://hospital-management-frontend.onrender.com"
+        ));
+
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         return source;
